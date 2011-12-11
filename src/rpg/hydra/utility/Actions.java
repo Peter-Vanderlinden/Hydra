@@ -1,0 +1,7 @@
+package rpg.hydra.utility;
+
+public enum Actions {
+	
+	MOVE
+
+}
