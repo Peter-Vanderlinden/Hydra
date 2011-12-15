@@ -31,16 +31,56 @@ public class Link implements Drawable,Updateable {
 	
 	public void move(Directions dir) {  // y increases downwards !!!
 		switch (dir) {
-		case TOP: if (background.getTileAt(x, y-1).isWalkable()) { y--; } break;
-		case RIGHT: if (background.getTileAt(x+1, y).isWalkable()) { x++; } break;
-		case BOTTOM: if (background.getTileAt(x, y+1).isWalkable()) { y++; } break;
-		case LEFT: if (background.getTileAt(x-1, y).isWalkable()) { x--; } break;
+		case TOP:  moveUp(); break;
+		case RIGHT:  moveRight(); break;
+		case BOTTOM:  moveDown(); break;
+		case LEFT:  moveLeft(); break;
 		}
 	}
 
 	public void update(Actions action, Directions dir) {
 		switch (action) {
 		case MOVE: move(dir); break;
+		}
+	}
+	
+	public void moveUp() {
+		if (y-1 < 0) {
+			background.slideDown();
+			y = Background.tilesyperview-1;
+		}
+		else if (background.getTileAt(x, y-1).isWalkable()) { 
+			y--; 
+		}
+	}
+		
+	public void moveRight() {
+		if (x+1 > Background.tilesxperview-1) {
+			background.slideLeft();
+			x = 0;
+		}
+		else if (background.getTileAt(x+1, y).isWalkable()) { 
+			x++; 
+		}
+	}
+	
+	public void moveDown() {
+		if (y+1 > Background.tilesyperview-1) {
+			background.slideUp();
+			y = 0;
+		}
+		else if (background.getTileAt(x, y+1).isWalkable()) { 
+			y++; 
+		}
+	}
+	
+	public void moveLeft() {
+		if (x-1 < 0) {
+			background.slideRight();
+			x = Background.tilesxperview-1;
+		}
+		else if (background.getTileAt(x-1, y).isWalkable()) { 
+			x--; 
 		}
 	}
 

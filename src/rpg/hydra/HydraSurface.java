@@ -22,6 +22,7 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 	private Background bg;
 	private Link link;
 	private HydraTouchInput touchinput;
+	private QuestConsole console;
 
 	public HydraSurface(Context context) {
 		super(context);
@@ -32,8 +33,12 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 		//droid = new Droid(BitmapFactory.decodeResource(getResources(), R.drawable.droid_1), 50, 50);
 		
 		bg = new Background(this);
+		
 		link = new Link(this, bg);
 		touchinput = new HydraTouchInput(link);
+		
+		console = new QuestConsole();
+		console.setMessage("this is an epic RPG.");
 		
 		// create the game loop thread
 		thread = new HydraEngine(getHolder(), this);
@@ -120,6 +125,7 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 		touchinput.draw(canvas);
 		//droid.draw(canvas);
 		link.draw(canvas);
+		console.draw(canvas);
 	}
 
 	/**
