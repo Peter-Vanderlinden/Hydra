@@ -1,9 +1,9 @@
 package rpg.hydra;
 
-import rpg.hydra.background.Background;
 import rpg.hydra.characters.Link;
 import rpg.hydra.utility.Actions;
 import rpg.hydra.utility.Directions;
+import rpg.hydra.utility.Drawable;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -18,27 +18,18 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 	private static final String TAG = HydraSurface.class.getSimpleName();
 	
 	private HydraEngine thread;
-	//private Droid droid;
-	private Background bg;
-	private Link link;
-	private HydraTouchInput touchinput;
-	private QuestConsole console;
+	private ObjectManager objectmanager;
+	private Action action;
 
 	public HydraSurface(Context context) {
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
-
-		// create droid and load bitmap
-		//droid = new Droid(BitmapFactory.decodeResource(getResources(), R.drawable.droid_1), 50, 50);
 		
-		bg = new Background(this);
-		
-		link = new Link(this, bg);
-		touchinput = new HydraTouchInput(link);
-		
-		console = new QuestConsole();
-		console.setMessage("this is an epic RPG.");
+		// create and initialize objectmanager
+		objectmanager = ObjectManager.getObjectManager();
+		objectmanager.setSurface(this);
+		objectmanager.initialize();
 		
 		// create the game loop thread
 		thread = new HydraEngine(getHolder(), this);
@@ -47,8 +38,8 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 		setFocusable(true);
 	}
 
-	public void surfaceChanged(SurfaceHolder holder, int format, int width,
-			int height) {
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		
 	}
 
 	public void surfaceCreated(SurfaceHolder holder) {
@@ -76,86 +67,57 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		try
-		{
-			if (event.getAction() == MotionEvent.ACTION_DOWN) {
-				touchinput.processTouch((int)event.getX(), (int)event.getY());
-			}
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			action = objectmanager.getTouchinput().processTouch((int)event.getX(), (int)event.getY());
 		}
-		catch (Exception e)
-		{
-			// this is the line of code that sends a real error message to the log
-			Log.e("ERROR", "ERROR IN CODE: " + e.toString());
-	 
-			// this is the line that prints out the location in
-			// the code where the error occurred.
-			e.printStackTrace();
-		}
-		
 		return true;
 	}
 	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		Log.d(TAG, "in onKeyDown");
 		if (event.getAction() == KeyEvent.ACTION_DOWN) {
-			Log.d(TAG, "inside if(action_down)");
-			if (keyCode == KeyEvent.KEYCODE_W) {
-				Log.d(TAG, "inside if(keycode_w)");
-				link.update(Actions.MOVE, Directions.TOP);
-				Log.d(TAG, "Link going up");
-			}
-			else if (keyCode == KeyEvent.KEYCODE_S) {
-				link.update(Actions.MOVE, Directions.BOTTOM);
-			}
-			else if (keyCode == KeyEvent.KEYCODE_A) {
-				link.update(Actions.MOVE, Directions.LEFT);
-			}
-			else if (keyCode == KeyEvent.KEYCODE_D) {
-				link.update(Actions.MOVE, Directions.RIGHT);
-			}
-			
+			action = objectmanager.getKeyinput().processKeyEvent(keyCode);	
 		}
 		return true;
 	}
 
 	public void render(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
-		bg.draw(canvas);
-		touchinput.draw(canvas);
-		//droid.draw(canvas);
-		link.draw(canvas);
-		console.draw(canvas);
+		for (Drawable object : objectmanager.getDrawable()) {
+			object.draw(canvas);
+		}
 	}
 
-	/**
-	 * This is the game update method. It iterates through all the objects
-	 * and calls their update method if they have one or calls specific
-	 * engine's update method.
-	 */
 	public void update() {
-//		// check collision with right wall if heading right
-//		if (droid.getSpeed().getxDirection() == Speed.DIRECTION_RIGHT
-//				&& droid.getX() + droid.getBitmap().getWidth() / 2 >= getWidth()) {
-//			droid.getSpeed().toggleXDirection();
-//		}
-//		// check collision with left wall if heading left
-//		if (droid.getSpeed().getxDirection() == Speed.DIRECTION_LEFT
-//				&& droid.getX() - droid.getBitmap().getWidth() / 2 <= 0) {
-//			droid.getSpeed().toggleXDirection();
-//		}
-//		// check collision with bottom wall if heading down
-//		if (droid.getSpeed().getyDirection() == Speed.DIRECTION_DOWN
-//				&& droid.getY() + droid.getBitmap().getHeight() / 2 >= getHeight()) {
-//			droid.getSpeed().toggleYDirection();
-//		}
-//		// check collision with top wall if heading up
-//		if (droid.getSpeed().getyDirection() == Speed.DIRECTION_UP
-//				&& droid.getY() - droid.getBitmap().getHeight() / 2 <= 0) {
-//			droid.getSpeed().toggleYDirection();
-//		}
-//		// Update the lone droid
-//		droid.update();
+		if (action != null) {
+			// decode and execute action
+			if (action.getAction() == Actions.MOVE) {
+				Link link = objectmanager.getLink();
+				if (action.getDirection() == Directions.TOP) {
+					link.moveUp();
+				}
+				else if (action.getDirection() == Directions.RIGHT) {
+					link.moveRight();
+				}
+				else if (action.getDirection() == Directions.BOTTOM) {
+					link.moveDown();
+				}
+				else if (action.getDirection() == Directions.LEFT) {
+					link.moveLeft();
+				}
+			}
+			if (action.getAction() == Actions.CONSOLE) {
+				QuestConsole console = objectmanager.getConsole();
+				if (action.getDirection() == Directions.TOP) {
+					console.showPrevious();
+				}
+				else if (action.getDirection() == Directions.BOTTOM) {
+					console.showNext();
+				}
+			}
+			action = null;
+		}
+		// do updates that don't depend on user input
 	}
 
 }

@@ -1,51 +1,49 @@
 package rpg.hydra;
 
+import java.util.ArrayList;
+
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
-import rpg.hydra.characters.Link;
 import rpg.hydra.utility.Actions;
 import rpg.hydra.utility.Directions;
 import rpg.hydra.utility.Drawable;
 
 public class HydraTouchInput implements Drawable {
 	
-	private Link link;
-	private ShapeDrawable[] rectangles;
+	private ArrayList<Button> buttons;
 	
-	public HydraTouchInput(Link link) {
-		this.link = link;
-		rectangles = new ShapeDrawable[4];
-		for (int i=0; i<4; i++) {
-			rectangles[i] = new ShapeDrawable(new RectShape());
-			rectangles[i].getPaint().setColor(Color.GRAY);
-		}
-		rectangles[0].setBounds(50, 560, 70, 580);
-		rectangles[1].setBounds(80, 545, 100, 565);
-		rectangles[2].setBounds(80, 575, 100, 595);
-		rectangles[3].setBounds(110, 560, 130, 580);
+	public HydraTouchInput() {
+		buttons = new ArrayList<Button>();
+		
+		int fourWayButtonX = 50;
+		int fourWayButtonY = 545;
+		buttons.add(new Button(fourWayButtonX, fourWayButtonY+BUTTON_SIZE-BUTTON_SIZE/4, Color.DKGRAY, new Action(Actions.MOVE,Directions.LEFT)));
+		buttons.add(new Button(fourWayButtonX+BUTTON_SIZE*3/2, fourWayButtonY, Color.DKGRAY, new Action(Actions.MOVE,Directions.TOP)));
+		buttons.add(new Button(fourWayButtonX+BUTTON_SIZE*3/2, fourWayButtonY+BUTTON_SIZE*3/2, Color.DKGRAY, new Action(Actions.MOVE,Directions.BOTTOM)));
+		buttons.add(new Button(fourWayButtonX+BUTTON_SIZE*3, fourWayButtonY+BUTTON_SIZE-BUTTON_SIZE/4, Color.DKGRAY, new Action(Actions.MOVE,Directions.RIGHT)));
+		
+		QuestConsole console = ObjectManager.getObjectManager().getConsole();
+		int x = console.getX() + console.getWidth();
+		int y = console.getY() + console.getHeight();
+		buttons.add(new Button(x-BUTTON_SIZE, console.getY(), Color.DKGRAY, new Action(Actions.CONSOLE,Directions.TOP)));
+		buttons.add(new Button(x-BUTTON_SIZE, y-BUTTON_SIZE, Color.DKGRAY, new Action(Actions.CONSOLE,Directions.BOTTOM)));
+		
 	}
 
 	public void draw(Canvas canvas) {
-		for (ShapeDrawable rect : rectangles) {
-			rect.draw(canvas);
+		for (Button button : buttons) {
+			button.draw(canvas);
 		}
 	}
 
-	public void processTouch(int x, int y) {
-		if (x >= 50 && x <= 70 && y >= 560 && y <= 580) {
-			link.update(Actions.MOVE, Directions.LEFT);
+	public Action processTouch(int x, int y) {
+		Action action = null;
+		for (Button button : buttons) {
+			if (button.inButton(x, y)) {
+				action = button.getAction();
+			}
 		}
-		else if (x >= 80 && x <= 100 && y >= 545 && y <= 565) {
-			link.update(Actions.MOVE, Directions.TOP);
-		}
-		else if (x >= 80 && x <= 100 && y >= 575 && y <= 595) {
-			link.update(Actions.MOVE, Directions.BOTTOM);
-		}
-		else if (x >= 110 && x <= 130 && y >= 560 && y <= 580) {
-			link.update(Actions.MOVE, Directions.RIGHT);
-		}
+		return action;
 	}
 
 }
