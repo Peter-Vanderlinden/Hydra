@@ -25,10 +25,10 @@ public class QuestConsole implements Drawable {
 	private int windowSize;
 	
 	public QuestConsole() {
-		x = 150;
-		y = 540;
-		width = 600;
-		height = 50;
+		x = 20;
+		y = 10;
+		width = 760;
+		height = 60;
 		rectangle = new ShapeDrawable(new RectShape());
 		rectangle.getPaint().setColor(Color.BLUE);
 		rectangle.setBounds(x, y, x+width, y+height);
@@ -39,16 +39,17 @@ public class QuestConsole implements Drawable {
 		paint.setTextSize(textSize);
 		paint.setTypeface(type);
 		windowStart = 0;
-		windowSize = 2;
+		windowSize = 3;
 		messages = new ArrayList<String>();
 		
-		messages.add("You are about to embark on a epic quest to retrieve the weapon");
-		messages.add("of awesomeness and to save the kingdom from the evil Android robot.");
-		messages.add("However, first you should try to find out more about this place.");
-		messages.add("It is said that a guardian dwells these dungeons, forever searching");
-		messages.add("and waiting for the champion that he is to help.");
-		messages.add("Go now, ranger, and may the power of the gods be with you...");
-		messages.add(" ");
+		messages.add("The last thing you remember was your ship getting caught in a storm.");
+		messages.add("You fought it all you could but the ship was sinking nevertheless.");
+		messages.add("Just as you thought you would never see another living soul,");
+		messages.add("you heard a woman's voice in your head, calling out for help.");
+		messages.add("Next thing you know, you woke up in this dark and cold dungeon.");
+		messages.add("********************");
+		
+		textSize += 4;
 	}
 
 	public ArrayList<String> getMessages() {
@@ -93,6 +94,12 @@ public class QuestConsole implements Drawable {
 		for (int i=windowStart; i<windowStart+windowSize; i++) {
 			canvas.drawText(messages.get(i), x+5, y+15+(offset*textSize), paint);
 			offset++;
+		}
+		if (windowStart != messages.size()-windowSize) {
+			canvas.drawText("\\/", x+710, y+19+2*textSize, paint);
+		}
+		if (windowStart != 0) {
+			canvas.drawText("/\\", x+710, y+15, paint);
 		}
 	}
 

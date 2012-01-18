@@ -1,12 +1,16 @@
 package rpg.hydra;
 
 import rpg.hydra.characters.Link;
+import rpg.hydra.items.Stone;
 import rpg.hydra.utility.Actions;
+import rpg.hydra.utility.Activatable;
+import rpg.hydra.utility.Command;
 import rpg.hydra.utility.Directions;
 import rpg.hydra.utility.Drawable;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -19,9 +23,13 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 	
 	private HydraEngine thread;
 	private ObjectManager objectmanager;
-	private Action action;
+	private Command command;
+	private HydraActivity activity;
+	private boolean acceptsInput;
+	private int counter;
+	private long previousTime;
 
-	public HydraSurface(Context context) {
+	public HydraSurface(Context context, HydraActivity activity) {
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
@@ -36,6 +44,11 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 		
 		// make the GameView focusable so it can handle events
 		setFocusable(true);
+		
+		this.activity = activity;
+		acceptsInput = true;
+		counter = 0;
+		previousTime = 0;
 	}
 
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -68,7 +81,7 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			action = objectmanager.getTouchinput().processTouch((int)event.getX(), (int)event.getY());
+			command = objectmanager.getTouchinput().processTouch((int)event.getX(), (int)event.getY());
 		}
 		return true;
 	}
@@ -76,7 +89,7 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (event.getAction() == KeyEvent.ACTION_DOWN) {
-			action = objectmanager.getKeyinput().processKeyEvent(keyCode);	
+			command = objectmanager.getKeyinput().processKeyEvent(keyCode);	
 		}
 		return true;
 	}
@@ -86,38 +99,74 @@ public class HydraSurface extends SurfaceView implements SurfaceHolder.Callback 
 		for (Drawable object : objectmanager.getDrawable()) {
 			object.draw(canvas);
 		}
+		for (Stone stone : objectmanager.getStones()) {
+			stone.draw(canvas);
+		}
 	}
 
 	public void update() {
-		if (action != null) {
-			// decode and execute action
-			if (action.getAction() == Actions.MOVE) {
+		if (command != null && acceptsInput) {
+			// decode and execute command
+			if (command.getAction() == Actions.MOVE) {
 				Link link = objectmanager.getLink();
-				if (action.getDirection() == Directions.TOP) {
+				if (command.getDirection() == Directions.UP) {
 					link.moveUp();
 				}
-				else if (action.getDirection() == Directions.RIGHT) {
+				else if (command.getDirection() == Directions.RIGHT) {
 					link.moveRight();
 				}
-				else if (action.getDirection() == Directions.BOTTOM) {
+				else if (command.getDirection() == Directions.DOWN) {
 					link.moveDown();
 				}
-				else if (action.getDirection() == Directions.LEFT) {
+				else if (command.getDirection() == Directions.LEFT) {
 					link.moveLeft();
 				}
 			}
-			if (action.getAction() == Actions.CONSOLE) {
+			else if (command.getAction() == Actions.CONSOLE) {
 				QuestConsole console = objectmanager.getConsole();
-				if (action.getDirection() == Directions.TOP) {
+				if (command.getDirection() == Directions.UP) {
 					console.showPrevious();
 				}
-				else if (action.getDirection() == Directions.BOTTOM) {
+				else if (command.getDirection() == Directions.DOWN) {
 					console.showNext();
 				}
 			}
-			action = null;
+			else if (command.getAction() == Actions.ACTIVATE) {
+				Link link = objectmanager.getLink();
+				for (Activatable object : objectmanager.getActivatable()) {
+					
+					boolean rightPositioning = link.getX() == object.getX() && link.getY() == object.getY()-1 && link.getFacingDirection() == Directions.DOWN;
+					rightPositioning = rightPositioning || (link.getX() == object.getX()+1 && link.getY() == object.getY() && link.getFacingDirection() == Directions.LEFT);
+					rightPositioning = rightPositioning || (link.getX() == object.getX() && link.getY() == object.getY()+1 && link.getFacingDirection() == Directions.UP);
+					rightPositioning = rightPositioning || (link.getX() == object.getX()-1 && link.getY() == object.getY() && link.getFacingDirection() == Directions.RIGHT);
+
+					if (object.isVisible() && rightPositioning) {
+						object.activate();
+					}
+				}
+			}
+			else if (command.getAction() == Actions.FIRE) {
+				long time = SystemClock.uptimeMillis();
+				if (time - previousTime > 500) {
+					objectmanager.getLink().fire();
+					previousTime = time;
+				}
+			}
+			command = null;
 		}
 		// do updates that don't depend on user input
+		for (int i=0; i<objectmanager.getStones().size(); i++) {
+			objectmanager.getStones().get(i).update();
+		}
+		objectmanager.getRobot().update();
+		if (objectmanager.getRobot().getDead() || objectmanager.getLink().getDead()) {
+			acceptsInput = false;
+			counter++;
+			if (counter >= 600) {
+				thread.setRunning(false);
+				activity.finish();
+			}
+		}
 	}
 
 }

@@ -2,6 +2,6 @@ package rpg.hydra.utility;
 
 public enum Actions {
 	
-	MOVE,CONSOLE
+	MOVE,CONSOLE,ACTIVATE,FIRE
 
 }

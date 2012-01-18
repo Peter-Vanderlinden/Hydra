@@ -3,15 +3,17 @@ package rpg.hydra.background;
 import rpg.hydra.HydraSurface;
 import rpg.hydra.ObjectManager;
 import rpg.hydra.R;
+import rpg.hydra.utility.Collisionable;
 import rpg.hydra.utility.Drawable;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
 // surfaceview = 792 x 592 in virtualbox
 
-public class Background implements Drawable {
+public class Background implements Drawable,Collisionable {
 	
 	private Tile floor;
+	private Tile floor2;
 	private Tile wallTopLeft;
 	private Tile wallTop;
 	private Tile wallTopRight;
@@ -43,6 +45,14 @@ public class Background implements Drawable {
 		return currentview.collisionAt(x, y);
 	}
 	
+	public int getCurrentQuadrantX() {
+		return currentview.getTilesViewX();
+	}
+	
+	public int getCurrentQuadrantY() {
+		return currentview.getTilesViewY();
+	}
+	
 	// No need to test for matrix limitations if world-boundaries are all non-walkable tiles 
 	public void slideUp() {
 		currentview = tilesviews[currentview.getTilesViewY()+1][currentview.getTilesViewX()];
@@ -63,6 +73,7 @@ public class Background implements Drawable {
 	private void initializeTiles() {
 		HydraSurface surface = ObjectManager.getObjectManager().getSurface();
 		floor = new Tile(BitmapFactory.decodeResource(surface.getResources(), R.drawable.house_floor),true);
+		floor2 = new Tile(BitmapFactory.decodeResource(surface.getResources(), R.drawable.house_floor_2),true);
 		wallTopLeft = new Tile(BitmapFactory.decodeResource(surface.getResources(), R.drawable.house_top_left),false);
 		wallTop = new Tile(BitmapFactory.decodeResource(surface.getResources(), R.drawable.house_top),false);
 		wallTopRight = new Tile(BitmapFactory.decodeResource(surface.getResources(), R.drawable.house_top_right),false);
@@ -123,7 +134,7 @@ public class Background implements Drawable {
 			for (int j=1; j<TILES_IN_VIEW_Y; j++) {
 				tiles[j][0] = wallLeft;
 				for (int i=1; i<TILES_IN_VIEW_X-1; i++) {
-					tiles[j][i] = floor;
+					tiles[j][i] = floor2;
 				}
 				tiles[j][TILES_IN_VIEW_X-1] = wallRight;
 			}

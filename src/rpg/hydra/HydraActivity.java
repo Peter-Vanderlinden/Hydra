@@ -21,7 +21,7 @@ public class HydraActivity extends Activity {
         // set our MainGameView as the View
     	try {
 			//code that crashes
-    		setContentView(new HydraSurface(this));
+    		setContentView(new HydraSurface(this,this));
 		}
 		catch (Exception e) {
 			// this is the line of code that sends a real error message to the log
@@ -45,17 +45,5 @@ public class HydraActivity extends Activity {
 		Log.d(TAG, "Stopping...");
 		super.onStop();
 	}
-	
-//	try {
-//		//code that crashes
-//	}
-//	catch (Exception e) {
-//		// this is the line of code that sends a real error message to the log
-//		Log.e("ERROR", "ERROR IN CODE: " + e.toString());
-// 
-//		// this is the line that prints out the location in
-//		// the code where the error occurred.
-//		e.printStackTrace();
-//	}
 	
 }
